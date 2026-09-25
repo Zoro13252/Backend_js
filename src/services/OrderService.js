@@ -1,49 +1,65 @@
+import { ForeignKeyConstraintError } from 'sequelize';
 import { Order } from '../models/Order.js';
-
-const orders = [];
-let nextId = 1;
+import { User } from '../models/User.js';
 
 class OrderService {
-  static create({ userId, products, status = 'new', total }) {
-    const order = new Order({
-      id: nextId++,
-      userId: Number(userId),
-      products,
-      status,
-      total: Number(total),
-    });
-    orders.push(order);
-    return order;
+  static async create({ userId, products, status = 'new', total }) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      const error = new Error('User not found');
+      error.status = 400;
+      throw error;
+    }
+
+    try {
+      return await Order.create({
+        userId: Number(userId),
+        products,
+        status,
+        total: total === undefined ? 0 : Number(total),
+      });
+    } catch (error) {
+      if (error instanceof ForeignKeyConstraintError) {
+        const notFound = new Error('User not found');
+        notFound.status = 400;
+        throw notFound;
+      }
+      throw error;
+    }
   }
 
-  static findAll() {
-    return orders.map((o) => o.toJSON());
+  static async findAll() {
+    return Order.findAll();
   }
 
-  static findById(id) {
-    const order = orders.find((o) => o.id === Number(id));
+  static async findById(id) {
+    return Order.findByPk(id);
+  }
+
+  static async update(id, data) {
+    const order = await Order.findByPk(id);
     if (!order) return null;
-    return order.toJSON();
-  }
 
-  static update(id, data) {
-    const index = orders.findIndex((o) => o.id === Number(id));
-    if (index === -1) return null;
-
-    const order = orders[index];
-    if (data.userId !== undefined) order.userId = Number(data.userId);
+    if (data.userId !== undefined) {
+      const user = await User.findByPk(data.userId);
+      if (!user) {
+        const error = new Error('User not found');
+        error.status = 400;
+        throw error;
+      }
+      order.userId = Number(data.userId);
+    }
     if (data.products !== undefined) order.products = data.products;
     if (data.status !== undefined) order.status = data.status;
     if (data.total !== undefined) order.total = Number(data.total);
 
-    return order.toJSON();
+    await order.save();
+    return order;
   }
 
-  static delete(id) {
-    const index = orders.findIndex((o) => o.id === Number(id));
-    if (index === -1) return false;
-    orders.splice(index, 1);
-    return true;
+  static async delete(id) {
+    const deleted = await Order.destroy({ where: { id } });
+    return deleted > 0;
   }
 }
 

@@ -1,21 +1,29 @@
-class Product {
-  constructor({ id, name, description, price, quantity }) {
-    this.id = id;
-    this.name = name;
-    this.description = description;
-    this.price = price;
-    this.quantity = quantity;
-  }
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../db/index.js';
 
-  toJSON() {
-    return {
-      id: this.id,
-      name: this.name,
-      description: this.description,
-      price: this.price,
-      quantity: this.quantity,
-    };
-  }
-}
+const Product = sequelize.define('Product', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  price: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  },
+});
 
 export { Product };

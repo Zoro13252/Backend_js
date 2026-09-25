@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { initDb } from './db/index.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -71,6 +72,13 @@ app.get('/', (_, res) => {
   res.json({ message: 'Welcome to the API' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to start database:', error);
+    process.exit(1);
+  });

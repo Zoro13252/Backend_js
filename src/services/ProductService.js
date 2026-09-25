@@ -1,49 +1,39 @@
 import { Product } from '../models/Product.js';
 
-const products = [];
-let nextId = 1;
-
 class ProductService {
-  static create({ name, description, price, quantity }) {
-    const product = new Product({
-      id: nextId++,
-      name,
-      description,
+  static async create({ name, description, price, quantity }) {
+    return Product.create({
+      name: name.trim(),
+      description: description ?? null,
       price: Number(price),
-      quantity: Number(quantity),
+      quantity: quantity === undefined ? 0 : Number(quantity),
     });
-    products.push(product);
-    return product;
   }
 
-  static findAll() {
-    return products.map((p) => p.toJSON());
+  static async findAll() {
+    return Product.findAll();
   }
 
-  static findById(id) {
-    const product = products.find((p) => p.id === Number(id));
+  static async findById(id) {
+    return Product.findByPk(id);
+  }
+
+  static async update(id, data) {
+    const product = await Product.findByPk(id);
     if (!product) return null;
-    return product.toJSON();
-  }
 
-  static update(id, data) {
-    const index = products.findIndex((p) => p.id === Number(id));
-    if (index === -1) return null;
-
-    const product = products[index];
-    if (data.name !== undefined) product.name = data.name;
+    if (data.name !== undefined) product.name = data.name.trim();
     if (data.description !== undefined) product.description = data.description;
     if (data.price !== undefined) product.price = Number(data.price);
     if (data.quantity !== undefined) product.quantity = Number(data.quantity);
 
-    return product.toJSON();
+    await product.save();
+    return product;
   }
 
-  static delete(id) {
-    const index = products.findIndex((p) => p.id === Number(id));
-    if (index === -1) return false;
-    products.splice(index, 1);
-    return true;
+  static async delete(id) {
+    const deleted = await Product.destroy({ where: { id } });
+    return deleted > 0;
   }
 }
 

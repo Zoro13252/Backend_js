@@ -1,18 +1,33 @@
-class User {
-  constructor({ id, name, email, password }) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.password = password;
-  }
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../db/index.js';
 
-  toJSON() {
-    return {
-      id: this.id,
-      name: this.name,
-      email: this.email,
-    };
-  }
-}
+const User = sequelize.define(
+  'User',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+  },
+  {
+    defaultScope: {
+      attributes: { exclude: ['password'] },
+    },
+  },
+);
 
 export { User };
